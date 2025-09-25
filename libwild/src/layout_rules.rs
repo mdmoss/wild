@@ -175,6 +175,7 @@ impl<'data> LayoutRulesBuilder<'data> {
                                         });
                                     }
                                     ContentsCommand::Align(a) => extra_min_alignment = *a,
+                                    ContentsCommand::Provide(_) => todo!(),
                                 }
                             }
                         }

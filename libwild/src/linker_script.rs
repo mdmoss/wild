@@ -96,11 +96,17 @@ pub(crate) enum ContentsCommand<'a> {
     SymbolAssignment(SymbolAssignment<'a>),
     // Align is the special case of assignment to the location counter (".").
     Align(Alignment),
+    Provide(Provide<'a>),
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SymbolAssignment<'a> {
     pub(crate) name: &'a [u8],
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct Provide<'a> {
+    pub(crate) symbol_assignment: SymbolAssignment<'a>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -326,7 +332,7 @@ fn parse_alignment(input: &mut &BStr) -> winnow::Result<Alignment> {
 fn parse_contents_command<'input>(
     input: &mut &'input BStr,
 ) -> winnow::Result<ContentsCommand<'input>> {
-    alt((parse_matcher, parse_assignment)).parse_next(input)
+    alt((parse_matcher, parse_assignment, parse_provide)).parse_next(input)
 }
 
 fn parse_assignment<'input>(input: &mut &'input BStr) -> winnow::Result<ContentsCommand<'input>> {
@@ -369,6 +375,21 @@ fn parse_matcher<'input>(input: &mut &'input BStr) -> winnow::Result<ContentsCom
     opt(';').parse_next(input)?;
     skip_comments_and_whitespace(input)?;
     Ok(ContentsCommand::Matcher(matcher))
+}
+
+fn parse_provide<'input>(input: &mut &'input BStr) -> winnow::Result<ContentsCommand<'input>> {
+    "PROVIDE".parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+    '('.parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+    let symbol_assignment = parse_symbol_assignment(input)?;
+    ')'.parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+
+    opt(';').parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+
+    Ok(ContentsCommand::Provide(Provide { symbol_assignment }))
 }
 
 fn parse_keep<'input>(input: &mut &'input BStr) -> winnow::Result<Matcher<'input>> {
@@ -635,6 +656,7 @@ mod tests {
                     KEEP(*(.rodata.foo));
                     . = ALIGN(32);
                     end_foo = .;
+                    PROVIDE(_test_provide = .);
                 }
             }
         ",
@@ -658,6 +680,11 @@ mod tests {
                                     ContentsCommand::Align(Alignment::new(32).unwrap()),
                                     ContentsCommand::SymbolAssignment(SymbolAssignment {
                                         name: "end_foo".as_bytes(),
+                                    }),
+                                    ContentsCommand::Provide(Provide {
+                                        symbol_assignment: SymbolAssignment {
+                                            name: "_test_provide".as_bytes(),
+                                        },
                                     }),
                                 ],
                                 alignment: Some(Alignment::new(8).unwrap()),
