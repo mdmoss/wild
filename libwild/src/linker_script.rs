@@ -94,6 +94,7 @@ pub(crate) struct Section<'a> {
 pub(crate) enum ContentsCommand<'a> {
     Matcher(Matcher<'a>),
     SymbolAssignment(SymbolAssignment<'a>),
+    // Align is the special case of assignment to the location counter (".").
     Align(Alignment),
 }
 
@@ -329,22 +330,38 @@ fn parse_contents_command<'input>(
 }
 
 fn parse_assignment<'input>(input: &mut &'input BStr) -> winnow::Result<ContentsCommand<'input>> {
+    // Once we implement expression parsing we can call parse_symbol_assigment and then return
+    // an `Align` as a special case when the LHS is the location counter.
+    parse_location_counter_assignment(input)
+        .map(ContentsCommand::Align)
+        .or_else(|_| parse_symbol_assignment(input).map(ContentsCommand::SymbolAssignment))
+}
+
+fn parse_location_counter_assignment<'input>(
+    input: &mut &'input BStr,
+) -> winnow::Result<Alignment> {
+    '.'.parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+    '='.parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+    let alignment = parse_alignment(input)?;
+    opt(';').parse_next(input)?;
+    skip_comments_and_whitespace(input)?;
+    Ok(alignment)
+}
+
+fn parse_symbol_assignment<'input>(
+    input: &mut &'input BStr,
+) -> winnow::Result<SymbolAssignment<'input>> {
     let name = parse_token(input)?;
     skip_comments_and_whitespace(input)?;
     '='.parse_next(input)?;
     skip_comments_and_whitespace(input)?;
-
-    let cmd = if name == b"." {
-        ContentsCommand::Align(parse_alignment(input)?)
-    } else {
-        '.'.parse_next(input)?;
-        ContentsCommand::SymbolAssignment(SymbolAssignment { name })
-    };
-
+    // TODO parse and handle expressions. For now, we only accept '.'.
+    '.'.parse_next(input)?;
     opt(';').parse_next(input)?;
     skip_comments_and_whitespace(input)?;
-
-    Ok(cmd)
+    Ok(SymbolAssignment { name })
 }
 
 fn parse_matcher<'input>(input: &mut &'input BStr) -> winnow::Result<ContentsCommand<'input>> {
