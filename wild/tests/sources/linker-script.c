@@ -16,11 +16,3 @@ static int foo1 __attribute__((used, section(".data.foo"))) = 0x01;
 static int baz1 __attribute__((used, section(".data.baz1"))) = 0x02;
 
 static int aaa1 __attribute__((used, section(".data.aaa"))) = 0x03;
-
-extern char _test_provide_referenced;
-
-static char use_test_provide_referenced(void) {
-  return _test_provide_referenced;
-}
-
-char _test_provide_defined = 1;
