@@ -108,6 +108,8 @@ pub(crate) struct InternalSymDefInfo<'data> {
     #[debug("{:?}", String::from_utf8_lossy(name))]
     pub(crate) name: &'data [u8],
     pub(crate) elf_symbol_type: SymbolType,
+    /// Indicates symbol was defined via a PROVIDE directive.
+    pub(crate) provided: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -132,7 +134,14 @@ impl<'data> InternalSymDefInfo<'data> {
             placement,
             name,
             elf_symbol_type: stt::NOTYPE,
+            provided: false,
         }
+    }
+
+    pub(crate) fn notype_provided(placement: SymbolPlacement, name: &'data [u8]) -> Self {
+        let mut info = InternalSymDefInfo::notype(placement, name);
+        info.provided = true;
+        info
     }
 }
 
@@ -217,6 +226,7 @@ impl<'data> Prelude<'data> {
             },
             name: b"_TLS_MODULE_BASE_",
             elf_symbol_type: stt::TLS,
+            provided: false,
         });
 
         symbol_definitions.extend(args.undefined.iter().map(|name| {

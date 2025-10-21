@@ -162,20 +162,31 @@ impl<'data> LayoutRulesBuilder<'data> {
                                         last_section_id = Some(section_id);
                                     }
                                     ContentsCommand::SymbolAssignment(assignment) => {
-                                        symbol_defs.push(if let Some(id) = last_section_id {
-                                            InternalSymDefInfo::notype(
-                                                SymbolPlacement::SectionEnd(id),
-                                                assignment.name,
-                                            )
+                                        let placement = if let Some(id) = last_section_id {
+                                            SymbolPlacement::SectionEnd(id)
                                         } else {
-                                            InternalSymDefInfo::notype(
-                                                SymbolPlacement::SectionStart(primary_section_id),
-                                                assignment.name,
-                                            )
-                                        });
+                                            SymbolPlacement::SectionStart(primary_section_id)
+                                        };
+
+                                        symbol_defs.push(InternalSymDefInfo::notype(
+                                            placement,
+                                            assignment.name,
+                                        ));
                                     }
                                     ContentsCommand::Align(a) => extra_min_alignment = *a,
-                                    ContentsCommand::Provide(_) => todo!(),
+                                    ContentsCommand::Provide(provide) => {
+                                        // FIXME unify with SymbolAssignment case above?
+                                        let placement = if let Some(id) = last_section_id {
+                                            SymbolPlacement::SectionEnd(id)
+                                        } else {
+                                            SymbolPlacement::SectionStart(primary_section_id)
+                                        };
+
+                                        symbol_defs.push(InternalSymDefInfo::notype_provided(
+                                            placement,
+                                            provide.symbol_assignment.name,
+                                        ));
+                                    }
                                 }
                             }
                         }
