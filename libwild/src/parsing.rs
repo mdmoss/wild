@@ -55,15 +55,16 @@ pub(crate) fn parse_input_files<'data>(
 pub(crate) fn process_linker_scripts<'data>(
     linker_scripts_in: &[InputLinkerScript<'data>],
     output_sections: &mut OutputSections<'data>,
-) -> Result<(Vec<ProcessedLinkerScript<'data>>, LayoutRules<'data>)> {
+) -> Result<(Vec<ProcessedLinkerScript<'data>>, LayoutRules<'data>, Vec<InternalSymDefInfo<'data>>)> {
     let mut builder = LayoutRulesBuilder::default();
+    let mut provide_defs: Vec<InternalSymDefInfo<'data>> = Vec::new();
 
     let linker_scripts = linker_scripts_in
         .iter()
-        .map(|script| builder.process_linker_script(script, output_sections))
+        .map(|script| builder.process_linker_script(script, output_sections, &mut provide_defs))
         .collect::<Result<Vec<ProcessedLinkerScript>>>()?;
 
-    Ok((linker_scripts, builder.build()))
+    Ok((linker_scripts, builder.build(), provide_defs))
 }
 
 pub(crate) struct ParsedInputs<'data> {

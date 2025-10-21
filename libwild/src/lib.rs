@@ -203,7 +203,7 @@ impl Linker {
             args.is_dynamic_executable.store(true, Ordering::Relaxed);
         }
 
-        let (linker_scripts, layout_rules) =
+        let (linker_scripts, layout_rules, provide_defs) =
             parsing::process_linker_scripts(&input_data.linker_scripts, &mut output_sections)?;
 
         let parsed_inputs = parsing::parse_input_files(&input_data.inputs, linker_scripts, args)?;
@@ -225,6 +225,7 @@ impl Linker {
             &self.herd,
             &mut output_sections,
             &layout_rules,
+            provide_defs,
         )?;
 
         let layout = layout::compute::<A>(

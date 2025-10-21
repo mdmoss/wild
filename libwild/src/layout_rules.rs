@@ -103,6 +103,7 @@ impl<'data> LayoutRulesBuilder<'data> {
         &mut self,
         input: &InputLinkerScript<'data>,
         output_sections: &mut OutputSections<'data>,
+        provide_defs: &mut Vec<InternalSymDefInfo<'data>>,
     ) -> Result<ProcessedLinkerScript<'data>> {
         let mut symbol_defs = Vec::new();
 
@@ -182,7 +183,7 @@ impl<'data> LayoutRulesBuilder<'data> {
                                             SymbolPlacement::SectionStart(primary_section_id)
                                         };
 
-                                        symbol_defs.push(InternalSymDefInfo::notype_provided(
+                                        provide_defs.push(InternalSymDefInfo::notype_provided(
                                             placement,
                                             provide.symbol_assignment.name,
                                         ));

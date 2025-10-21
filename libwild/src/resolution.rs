@@ -74,6 +74,7 @@ pub fn resolve_symbols_and_sections<'data>(
     herd: &'data bumpalo_herd::Herd,
     output_sections: &mut OutputSections<'data>,
     layout_rules: &LayoutRules<'data>,
+    provide_defs: Vec<InternalSymDefInfo<'data>>,
 ) -> Result<ResolutionOutputs<'data>> {
     let (mut resolved_groups, undefined_symbols) = resolve_symbols_in_files(symbol_db)?;
 
@@ -96,6 +97,7 @@ pub fn resolve_symbols_and_sections<'data>(
         symbol_db,
         per_symbol_flags,
         &mut custom_start_stop_defs,
+        provide_defs,
     )?;
 
     let ResolvedFile::Epilogue(epilogue) = resolved_groups
@@ -626,6 +628,7 @@ fn canonicalise_undefined_symbols<'data>(
     symbol_db: &mut SymbolDb<'data>,
     per_symbol_flags: &mut PerSymbolFlags,
     custom_start_stop_defs: &mut Vec<InternalSymDefInfo<'data>>,
+    provide_defs: Vec<InternalSymDefInfo<'data>>,
 ) -> Result {
     let mut name_to_id: PassThroughHashMap<UnversionedSymbolName<'data>, SymbolId> =
         Default::default();
@@ -657,6 +660,11 @@ fn canonicalise_undefined_symbols<'data>(
             PreHashedSymbolName::Unversioned(pre_hashed) => {
                 match name_to_id.entry(pre_hashed) {
                     hashbrown::hash_map::Entry::Vacant(entry) => {
+                        // Does a linker script define the symbol via a PROVIDE?
+                        if let Some(provide) = provide_defs.iter().find(|p| p.name == pre_hashed.bytes()) {
+                            println!("we have a provide!");
+                        }
+
                         let symbol_id = allocate_start_stop_symbol_id(
                             pre_hashed,
                             symbol_db,
