@@ -15,11 +15,9 @@ SECTIONS
         . = ALIGN(512);
         start_of_512 = .;
         *(.data.2)
-    }
-    .bss : { *(.bss) }
-    .provide_tests : {
         PROVIDE(provide_unreferenced = .);
         PROVIDE(provide_referenced = .);
         PROVIDE(provide_defined = .);
     }
+    .bss : { *(.bss) }
 }

@@ -183,6 +183,8 @@ impl<'data> LayoutRulesBuilder<'data> {
                                             SymbolPlacement::SectionStart(primary_section_id)
                                         };
 
+                                        symbol_defs.push(InternalSymDefInfo::notype_provided(placement, provide.symbol_assignment.name));
+
                                         provide_defs.push(InternalSymDefInfo::notype_provided(
                                             placement,
                                             provide.symbol_assignment.name,

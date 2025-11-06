@@ -3134,7 +3134,11 @@ fn write_internal_symbols(
             continue;
         };
 
+
         let symbol_name = layout.symbol_db.symbol_name(symbol_id)?;
+
+        dbg!(symbol_name, resolution);
+
         let mut shndx = def_info
             .section_id()
             .map(|section_id| {

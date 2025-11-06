@@ -663,6 +663,13 @@ fn canonicalise_undefined_symbols<'data>(
                         // Does a linker script define the symbol via a PROVIDE?
                         if let Some(provide) = provide_defs.iter().find(|p| p.name == pre_hashed.bytes()) {
                             println!("we have a provide!");
+
+                            // First choice: do we add the PROVIDE'd symbol to the symbol db and replace the definition?
+                            // Or do we just somehow give the existing symbol the provide'd symbol's information?
+                            // I think it's more correct to add the PROVIDE'd symbol, especially as we already have a way of replacing.
+                            //let symbol_id = symbol_db.add_start_stop_symbol(per_symbol_flags, UnversionedSymbolName::prehashed(provide.name));
+
+                            //symbol_db.add_start_stop_symbol(per_symbol_flags, symbol_name)
                         }
 
                         let symbol_id = allocate_start_stop_symbol_id(

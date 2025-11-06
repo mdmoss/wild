@@ -2925,7 +2925,8 @@ fn integration_test(
         "symbol-version-symver-error.c",
         "args-precedence.c",
         "entry-in-shared.c",
-        "alignment.c"
+        "alignment.c",
+        "linker-script-provide.c",
     )]
     program_name: &'static str,
     #[allow(unused_variables)] setup_symlink: (),
